@@ -464,15 +464,31 @@ class OSUtils {
       return pattern.matcher(email).matches();
    }
 
+
+   static int areNoticificationsEnableCount = 0;
+   static boolean enableFlag = true;
+   static boolean noticificationState = true;
+
    // Get the app's permission which will be false if the user disabled notifications for the app
    //   from Settings > Apps or by long pressing the notifications and selecting block.
    //   - Detection works on Android 4.4+, requires Android Support v4 Library 24.0.0+
    static boolean areNotificationsEnabled(Context  context) {
-      try {
-         return NotificationManagerCompat.from(OneSignal.appContext).areNotificationsEnabled();
-      } catch (Throwable t) {}
 
-      return true;
+      // 读五次，实际读取一次，减少方法调用次数
+      if (enableFlag) {
+         enableFlag = false;
+         try {
+            noticificationState = NotificationManagerCompat.from(OneSignal.appContext).areNotificationsEnabled();
+         } catch (Throwable t) {
+         }
+      }
+
+      areNoticificationsEnableCount++;
+      if (areNoticificationsEnableCount > 5){
+         enableFlag = true;
+         areNoticificationsEnableCount = 0;
+      }
+      return noticificationState;
    }
 
    static boolean isRunningOnMainThread() {

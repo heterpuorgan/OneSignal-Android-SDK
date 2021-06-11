@@ -86,6 +86,7 @@ import org.awaitility.Duration;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -96,6 +97,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLog;
 
 import java.lang.reflect.Field;
@@ -153,6 +155,7 @@ import static org.robolectric.Shadows.shadowOf;
         sdk = 21
 )
 @RunWith(RobolectricTestRunner.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class GenerateNotificationRunner {
 
    private static int callbackCounter = 0;
@@ -214,7 +217,12 @@ public class GenerateNotificationRunner {
 
    @AfterClass
    public static void afterEverything() throws Exception {
-      StaticResetHelper.restSetStaticFields();
+      TestHelpers.beforeTestInitAndCleanup();
+   }
+
+   @After
+   public void afterEachTest() throws Exception {
+      TestHelpers.afterTestCleanup();
    }
    
    public static Bundle getBaseNotifBundle() {
@@ -711,9 +719,10 @@ public class GenerateNotificationRunner {
    
    @Test
    @Config(shadows = { ShadowGenerateNotification.class })
-   public void shouldUpdateBadgesWhenDismissingNotification() {
+   public void shouldUpdateBadgesWhenDismissingNotification() throws Exception {
       Bundle bundle = getBaseNotifBundle();
       NotificationBundleProcessor_ProcessFromFCMIntentService(blankActivity, bundle);
+      threadAndTaskWait();
       assertEquals(notifMessage, ShadowRoboNotificationManager.getLastShadowNotif().getContentText());
       assertEquals(1, ShadowBadgeCountUpdater.lastCount);
    

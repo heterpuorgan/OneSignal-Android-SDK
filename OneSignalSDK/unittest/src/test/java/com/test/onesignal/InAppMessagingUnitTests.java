@@ -13,7 +13,6 @@ import com.onesignal.OneSignalPackagePrivateHelper;
 import com.onesignal.OneSignalPackagePrivateHelper.OSTestInAppMessage;
 import com.onesignal.OneSignalPackagePrivateHelper.OSTestInAppMessageAction;
 import com.onesignal.OneSignalPackagePrivateHelper.OSTestTrigger;
-import com.onesignal.ShadowAdvertisingIdProviderGPS;
 import com.onesignal.ShadowCustomTabsClient;
 import com.onesignal.ShadowCustomTabsSession;
 import com.onesignal.ShadowDynamicTimer;
@@ -37,6 +36,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.ArrayList;
@@ -62,7 +62,6 @@ import static junit.framework.Assert.assertTrue;
             ShadowOneSignalRestClient.class,
             ShadowPushRegistratorFCM.class,
             ShadowOSUtils.class,
-            ShadowAdvertisingIdProviderGPS.class,
             ShadowCustomTabsClient.class,
             ShadowCustomTabsSession.class,
             ShadowNotificationManagerCompat.class,
@@ -72,6 +71,7 @@ import static junit.framework.Assert.assertTrue;
         sdk = 26
 )
 @RunWith(RobolectricTestRunner.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class InAppMessagingUnitTests {
 
     private static final String IAM_CLICK_ID = "button_id_123";

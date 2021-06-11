@@ -5,7 +5,7 @@ ext {
 
     androidXVersion = '[1.0.0, 1.99.99]'
     androidWorkVersion = '[2.0.0, 2.99.99]'
-    firebaseMessagingVersion = '[19.0.0, 21.99.99]'
+    firebaseMessagingVersion = '[19.0.0, 22.99.99]'
     googleGMSVersion = '[17.0.0, 17.99.99]'
 }
 
@@ -45,11 +45,6 @@ dependencies {
     // play-services-location:16.0.0 is the last version before going to AndroidX
     // play-services-location:17.0.0 is the first version using AndroidX
     compileOnly "com.google.android.gms:play-services-location:$googleGMSVersion"
-
-    // play-services-ads-identifier:16.0.0 is the last version before going to AndroidX
-    // play-services-ads-identifier:17.0.0 is the first version using AndroidX
-    // Classes used to live in play-services-base before this
-    implementation "com.google.android.gms:play-services-ads-identifier:$googleGMSVersion"
 
     // play-services-base:16.1.0 is the last version before going to AndroidX
     // play-services-base:17.0.0 is the first version using AndroidX

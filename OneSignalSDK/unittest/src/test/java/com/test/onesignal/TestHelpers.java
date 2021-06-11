@@ -26,7 +26,6 @@ import com.onesignal.OneSignalPackagePrivateHelper.OSTestInAppMessage;
 import com.onesignal.OneSignalPackagePrivateHelper.TestOneSignalPrefs;
 import com.onesignal.OneSignalShadowPackageManager;
 import com.onesignal.OSOutcomeEvent;
-import com.onesignal.ShadowAdvertisingIdProviderGPS;
 import com.onesignal.ShadowCustomTabsClient;
 import com.onesignal.ShadowDynamicTimer;
 import com.onesignal.ShadowFCMBroadcastReceiver;
@@ -62,9 +61,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.robolectric.Robolectric;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.shadows.ShadowAlarmManager;
-import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.util.Scheduler;
 
 import java.util.ArrayList;
@@ -74,6 +73,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.onesignal.OneSignalPackagePrivateHelper.JSONUtils;
+import static com.onesignal.OneSignalPackagePrivateHelper.OneSignal_OSTaskController_ShutdownNow;
 import static junit.framework.Assert.assertEquals;
 import static org.robolectric.Shadows.shadowOf;
 
@@ -105,7 +105,6 @@ public class TestHelpers {
       ShadowPushRegistratorADM.resetStatics();
       ShadowHmsInstanceId.resetStatics();
       ShadowPushRegistratorHMS.resetStatics();
-      ShadowAdvertisingIdProviderGPS.resetStatics();
 
       ShadowNotificationManagerCompat.enabled = true;
 
@@ -138,6 +137,7 @@ public class TestHelpers {
 
    public static void afterTestCleanup() throws Exception {
       try {
+         OneSignal_OSTaskController_ShutdownNow();
          stopAllOSThreads();
       } catch (Exception e) {
          e.printStackTrace();
@@ -209,7 +209,7 @@ public class TestHelpers {
 
    // Run any OneSignal background threads including any pending runnables
    public static void threadAndTaskWait() throws Exception {
-      ShadowApplication.getInstance().getForegroundThreadScheduler().runOneTask();
+      shadowOf(RuntimeEnvironment.application).getForegroundThreadScheduler().runOneTask();
       // Runs Runnables posted by calling View.post() which are run on the main thread.
       Robolectric.getForegroundThreadScheduler().runOneTask();
 

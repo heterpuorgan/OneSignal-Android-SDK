@@ -3,8 +3,8 @@ package com.test.onesignal;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
-import android.support.annotation.NonNull;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.onesignal.NotificationOpenedActivityHMS;
@@ -23,6 +23,8 @@ import com.onesignal.example.BlankActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,6 +33,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.android.controller.ActivityController;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLog;
 
 import java.util.UUID;
@@ -63,6 +66,7 @@ import static org.robolectric.Shadows.shadowOf;
     sdk = 26
 )
 @RunWith(RobolectricTestRunner.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class NotificationOpenedActivityHMSIntegrationTestsRunner {
 
     private static final String TEST_ACTION_ID = "myTestActionId";
@@ -80,6 +84,16 @@ public class NotificationOpenedActivityHMSIntegrationTestsRunner {
         ShadowOSUtils.supportsHMS(true);
         // Set remote_params GET response
         setRemoteParamsGetHtmlResponse();
+    }
+
+    @AfterClass
+    public static void afterEverything() throws Exception {
+        TestHelpers.beforeTestInitAndCleanup();
+    }
+
+    @After
+    public void afterEachTest() throws Exception {
+        TestHelpers.afterTestCleanup();
     }
 
     private static @NonNull Intent helper_baseHMSOpenIntent() {

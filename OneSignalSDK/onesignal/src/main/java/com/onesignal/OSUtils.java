@@ -62,7 +62,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -402,13 +401,31 @@ class OSUtils {
       }
    }
 
-   static String getManifestMeta(Context context, String metaName) {
+   static Bundle getManifestMetaBundle(Context context) {
+      ApplicationInfo ai;
       try {
-         ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-         Bundle bundle = ai.metaData;
+         ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+         return ai.metaData;
+      } catch (PackageManager.NameNotFoundException e) {
+         Log(OneSignal.LOG_LEVEL.ERROR, "Manifest application info not found", e);
+      }
+
+      return null;
+   }
+
+   static boolean getManifestMetaBoolean(Context context, String metaName) {
+      Bundle bundle = getManifestMetaBundle(context);
+      if (bundle != null) {
+         return bundle.getBoolean(metaName);
+      }
+
+      return false;
+   }
+
+   static String getManifestMeta(Context context, String metaName) {
+      Bundle bundle = getManifestMetaBundle(context);
+      if (bundle != null) {
          return bundle.getString(metaName);
-      } catch (Throwable t) {
-         Log(OneSignal.LOG_LEVEL.ERROR, "", t);
       }
 
       return null;
@@ -420,24 +437,6 @@ class OSUtils {
       if (bodyResId != 0)
          return resources.getString(bodyResId);
       return defaultStr;
-   }
-
-   static String getCorrectedLanguage() {
-      String lang = Locale.getDefault().getLanguage();
-
-      // https://github.com/OneSignal/OneSignal-Android-SDK/issues/64
-      if (lang.equals("iw"))
-         return "he";
-      if (lang.equals("in"))
-         return "id";
-      if (lang.equals("ji"))
-         return "yi";
-
-      // https://github.com/OneSignal/OneSignal-Android-SDK/issues/98
-      if (lang.equals("zh"))
-         return lang + "-" + Locale.getDefault().getCountry();
-
-      return lang;
    }
 
    static boolean isValidEmail(String email) {

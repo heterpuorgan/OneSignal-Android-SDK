@@ -13,12 +13,14 @@ class OSTaskRemoteController extends OSTaskController {
     static final String LOGOUT_EMAIL = "logoutEmail()";
     static final String SYNC_HASHED_EMAIL = "syncHashedEmail()";
     static final String SET_EXTERNAL_USER_ID = "setExternalUserId()";
+    static final String SET_LANGUAGE = "setLanguage()";
     static final String SET_SUBSCRIPTION = "setSubscription()";
     static final String PROMPT_LOCATION = "promptLocation()";
     static final String IDS_AVAILABLE = "idsAvailable()";
     static final String SEND_TAG = "sendTag()";
     static final String SEND_TAGS = "sendTags()";
     static final String SET_LOCATION_SHARED = "setLocationShared()";
+    static final String SET_DISABLE_GMS_MISSING_PROMPT = "setDisableGMSMissingPrompt()";
     static final String SET_REQUIRES_USER_PRIVACY_CONSENT = "setRequiresUserPrivacyConsent()";
     static final String UNSUBSCRIBE_WHEN_NOTIFICATION_ARE_DISABLED = "unsubscribeWhenNotificationsAreDisabled()";
     static final String HANDLE_NOTIFICATION_OPEN = "handleNotificationOpen()";
@@ -38,12 +40,14 @@ class OSTaskRemoteController extends OSTaskController {
             LOGOUT_EMAIL,
             SYNC_HASHED_EMAIL,
             SET_EXTERNAL_USER_ID,
+            SET_LANGUAGE,
             SET_SUBSCRIPTION,
             PROMPT_LOCATION,
             IDS_AVAILABLE,
             SEND_TAG,
             SEND_TAGS,
             SET_LOCATION_SHARED,
+            SET_DISABLE_GMS_MISSING_PROMPT,
             SET_REQUIRES_USER_PRIVACY_CONSENT,
             UNSUBSCRIBE_WHEN_NOTIFICATION_ARE_DISABLED,
             HANDLE_NOTIFICATION_OPEN,

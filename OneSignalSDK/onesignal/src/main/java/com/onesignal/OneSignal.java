@@ -47,6 +47,8 @@ import androidx.core.app.NotificationCompat;
 
 import com.onesignal.influence.data.OSTrackerFactory;
 import com.onesignal.influence.domain.OSInfluence;
+import com.onesignal.language.LanguageContext;
+import com.onesignal.language.LanguageProviderAppDefined;
 import com.onesignal.outcomes.data.OSOutcomeEventsFactory;
 
 import org.json.JSONArray;
@@ -368,6 +370,8 @@ public class OneSignal {
    private static String smsId = null;
    private static int subscribableStatus = Integer.MAX_VALUE;
 
+   private static LanguageContext languageContext = null;
+
    static OSRemoteNotificationReceivedHandler remoteNotificationReceivedHandler;
    static OSNotificationWillShowInForegroundHandler notificationWillShowInForegroundHandler;
    static OSNotificationOpenedHandler notificationOpenedHandler;
@@ -398,13 +402,13 @@ public class OneSignal {
    private static TrackAmazonPurchase trackAmazonPurchase;
    private static TrackFirebaseAnalytics trackFirebaseAnalytics;
 
-   private static final String VERSION = "040300";
+   private static final String VERSION = "040400";
    public static String getSdkVersionRaw() {
       return VERSION;
    }
 
    private static OSLogger logger = new OSLogWrapper();
-   private static FocusTimeController focusTimeController = new FocusTimeController(new OSFocusTimeProcessorFactory(), logger);
+   private static FocusTimeController focusTimeController;
    private static OSSessionManager.SessionListener sessionListener = new OSSessionManager.SessionListener() {
          @Override
          public void onSessionEnding(@NonNull List<OSInfluence> lastInfluences) {
@@ -412,13 +416,13 @@ public class OneSignal {
                OneSignal.Log(LOG_LEVEL.WARN, "OneSignal onSessionEnding called before init!");
             if (outcomeEventsController != null)
                outcomeEventsController.cleanOutcomes();
-            focusTimeController.onSessionEnded(lastInfluences);
+            getFocusTimeController().onSessionEnded(lastInfluences);
          }
       };
 
    private static OSInAppMessageControllerFactory inAppMessageControllerFactory = new OSInAppMessageControllerFactory();
    static OSInAppMessageController getInAppMessageController() {
-      return inAppMessageControllerFactory.getController(getDBHelperInstance(), taskController, getLogger());
+      return inAppMessageControllerFactory.getController(getDBHelperInstance(), taskController, getLogger(), languageContext);
    }
    private static OSTime time = new OSTimeImpl();
    private static OSRemoteParamController remoteParamController = new OSRemoteParamController();
@@ -431,16 +435,6 @@ public class OneSignal {
    @Nullable private static OSOutcomeEventsController outcomeEventsController;
    @Nullable private static OSOutcomeEventsFactory outcomeEventsFactory;
    @Nullable private static OSNotificationDataController notificationDataController;
-
-   @Nullable private static AdvertisingIdentifierProvider adIdProvider;
-   private static synchronized @Nullable AdvertisingIdentifierProvider getAdIdProvider() {
-      if (adIdProvider == null) {
-         if (OSUtils.isAndroidDeviceType())
-            adIdProvider = new AdvertisingIdProviderGPS();
-      }
-
-      return adIdProvider;
-   }
 
    @SuppressWarnings("WeakerAccess")
    public static String sdkType = "native";
@@ -833,6 +827,9 @@ public class OneSignal {
 
       // Do work here that should only happen once or at the start of a new lifecycle
       if (wasAppContextNull) {
+         // Set Language Context to null
+         languageContext = new LanguageContext(preferences);
+
          // Prefs require a context to save
          // If the previous state of appContext was null, kick off write in-case it was waiting
          OneSignalPrefs.startDelayedWrite();
@@ -901,7 +898,7 @@ public class OneSignal {
             activityLifecycleHandler.setNextResumeIsFirstActivity(true);
          }
          OSNotificationRestoreWorkManager.beginEnqueueingWork(context, false);
-         focusTimeController.appForegrounded();
+         getFocusTimeController().appForegrounded();
       } else if (activityLifecycleHandler != null) {
          activityLifecycleHandler.setNextResumeIsFirstActivity(true);
       }
@@ -1299,7 +1296,7 @@ public class OneSignal {
       if (trackAmazonPurchase != null)
          trackAmazonPurchase.checkListener();
 
-      focusTimeController.appBackgrounded();
+      getFocusTimeController().appBackgrounded();
 
       scheduleSyncService();
    }
@@ -1347,7 +1344,7 @@ public class OneSignal {
       if (shouldLogUserPrivacyConsentErrorMessageForMethodName("onAppFocus"))
          return;
 
-      focusTimeController.appForegrounded();
+      getFocusTimeController().appForegrounded();
 
       doSessionInit();
 
@@ -1406,7 +1403,6 @@ public class OneSignal {
          public void run() {
             try {
                registerUserTask();
-               OneSignalChromeTabAndroidFrame.setup(appId, userId, AdvertisingIdProviderGPS.getLastValue(), getRemoteParams());
             } catch(JSONException t) {
                Log(LOG_LEVEL.FATAL, "FATAL Error registering device!", t);
             }
@@ -1422,15 +1418,10 @@ public class OneSignal {
 
       deviceInfo.put("app_id", getSavedAppId());
 
-      if (getAdIdProvider() != null) {
-         String adId = getAdIdProvider().getIdentifier(appContext);
-         if (adId != null)
-            deviceInfo.put("ad_id", adId);
-      }
       deviceInfo.put("device_os", Build.VERSION.RELEASE);
       deviceInfo.put("timezone", getTimeZoneOffset());
       deviceInfo.put("timezone_id", getTimeZoneId());
-      deviceInfo.put("language", OSUtils.getCorrectedLanguage());
+      deviceInfo.put("language", languageContext.getLanguage());
       deviceInfo.put("sdk", VERSION);
       deviceInfo.put("sdk_type", sdkType);
       deviceInfo.put("android_package", packageName);
@@ -1667,6 +1658,36 @@ public class OneSignal {
 
       emailLogoutHandler = callback;
       OneSignalStateSynchronizer.logoutEmail();
+   }
+
+   public static void setLanguage(@NonNull final String language) {
+      if (taskRemoteController.shouldQueueTaskForInit(OSTaskRemoteController.SET_LANGUAGE)) {
+         logger.error("Waiting for remote params. " +
+                 "Moving " + OSTaskRemoteController.SET_LANGUAGE + " operation to a pending task queue.");
+         taskRemoteController.addTaskToQueue(new Runnable() {
+            @Override
+            public void run() {
+               logger.debug("Running " + OSTaskRemoteController.SET_LANGUAGE + " operation from pending task queue.");
+               setLanguage(language);
+            }
+         });
+         return;
+      }
+
+      if (shouldLogUserPrivacyConsentErrorMessageForMethodName(OSTaskRemoteController.SET_LANGUAGE))
+         return;
+
+      LanguageProviderAppDefined languageProviderAppDefined = new LanguageProviderAppDefined(preferences);
+      languageProviderAppDefined.setLanguage(language);
+      languageContext.setStrategy(languageProviderAppDefined);
+
+      try {
+         JSONObject deviceInfo = new JSONObject();
+         deviceInfo.put("language", languageContext.getLanguage());
+         OneSignalStateSynchronizer.updateDeviceInfo(deviceInfo);
+      } catch (JSONException exception) {
+         exception.printStackTrace();
+      }
    }
 
    public static void setExternalUserId(@NonNull final String externalId) {
@@ -2157,7 +2178,7 @@ public class OneSignal {
       int jsonArraySize = dataArray.length();
 
       boolean urlOpened = false;
-      boolean launchUrlSuppress = "true".equals(OSUtils.getManifestMeta(context, "com.onesignal.suppressLaunchURLs"));
+      boolean launchUrlSuppress = OSUtils.getManifestMetaBoolean(context, "com.onesignal.suppressLaunchURLs");
 
       for (int i = 0; i < jsonArraySize; i++) {
          try {
@@ -2550,8 +2571,6 @@ public class OneSignal {
       }
 
       OneSignalStateSynchronizer.refreshSecondaryChannelState();
-
-      OneSignalChromeTabAndroidFrame.setup(appId, userId, AdvertisingIdProviderGPS.getLastValue(), getRemoteParams());
    }
 
    static void updateEmailIdDependents(String emailId) {
@@ -2583,7 +2602,7 @@ public class OneSignal {
       return remoteParamController.isGMSMissingPromptDisable();
    }
 
-   static boolean isLocationShared() {
+   public static boolean isLocationShared() {
       return remoteParamController.isLocationShared();
    }
 
@@ -2632,6 +2651,18 @@ public class OneSignal {
 
       getCurrentSubscriptionState(appContext).setPushDisabled(disable);
       OneSignalStateSynchronizer.setSubscription(!disable);
+   }
+
+
+   /**
+    * This method will be replaced by remote params set
+    */
+   public static void disableGMSMissingPrompt(final boolean promptDisable) {
+      // Already set by remote params
+      if (getRemoteParamController().hasDisableGMSMissingPromptKey())
+         return;
+
+      getRemoteParamController().saveGMSMissingPromptDisable(promptDisable);
    }
 
    /**
@@ -3173,7 +3204,15 @@ public class OneSignal {
       return taskRemoteController;
    }
 
+   static OSTaskController getTaskController() {
+      return taskController;
+   }
+
    static FocusTimeController getFocusTimeController() {
+      if (focusTimeController == null) {
+         focusTimeController = new FocusTimeController(new OSFocusTimeProcessorFactory(), logger);
+      }
+
       return focusTimeController;
    }
    /*

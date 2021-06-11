@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.onesignal.OSDynamicTriggerController.OSDynamicTriggerControllerObserver;
 import com.onesignal.OneSignalRestClient.ResponseHandler;
+import com.onesignal.language.LanguageContext;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +40,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
 
     private final OSLogger logger;
     private final OSTaskController taskController;
+    private final LanguageContext languageContext;
 
     private OSSystemConditionController systemConditionController;
     private OSInAppMessageRepository inAppMessageRepository;
@@ -87,7 +89,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
     Date lastTimeInAppDismissed = null;
     private int htmlNetworkRequestAttemptCount = 0;
 
-    protected OSInAppMessageController(OneSignalDbHelper dbHelper, OSTaskController controller, OSLogger logger) {
+    protected OSInAppMessageController(OneSignalDbHelper dbHelper, OSTaskController controller, OSLogger logger, LanguageContext languageContext) {
         taskController = controller;
         messages = new ArrayList<>();
         dismissedMessages = OSUtils.newConcurrentSet();
@@ -97,6 +99,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
         clickedClickIds = OSUtils.newConcurrentSet();
         triggerController = new OSTriggerController(this);
         systemConditionController = new OSSystemConditionController(this);
+        this.languageContext = languageContext;
         this.logger = logger;
 
         Set<String> tempDismissedSet = OneSignalPrefs.getStringSet(
@@ -285,15 +288,15 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
     }
 
     private @Nullable String variantIdForMessage(@NonNull OSInAppMessage message) {
-        String languageIdentifier = OSUtils.getCorrectedLanguage();
+        String language = languageContext.getLanguage();
 
         for (String variant : PREFERRED_VARIANT_ORDER) {
             if (!message.variants.containsKey(variant))
                 continue;
 
             HashMap<String, String> variantMap = message.variants.get(variant);
-            if (variantMap.containsKey(languageIdentifier))
-                return variantMap.get(languageIdentifier);
+            if (variantMap.containsKey(language))
+                return variantMap.get(language);
             return variantMap.get("default");
         }
 
@@ -660,7 +663,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
             // Make sure no message is ever added to the queue more than once
             if (!messageDisplayQueue.contains(message)) {
                 messageDisplayQueue.add(message);
-                logger.debug("In app message with id, " + message.messageId + ", added to the queue");
+                logger.debug("In app message with id: " + message.messageId + ", added to the queue");
             }
 
             attemptToShowInAppMessage();
@@ -683,7 +686,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
                 return;
             }
 
-            logger.debug("In app message is currently showing or there are no IAMs left in the queue!");
+            logger.debug("In app message is currently showing or there are no IAMs left in the queue! isInAppMessageShowing: " + isInAppMessageShowing());
         }
     }
 
@@ -726,7 +729,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
     }
 
     void messageWasDismissedByBackPress(@NonNull OSInAppMessage message) {
-        OneSignal.onesignalLog(OneSignal.LOG_LEVEL.DEBUG, "OSInAppMessageController messageWasDismissed by back press: " + message.toString());
+        OneSignal.onesignalLog(OneSignal.LOG_LEVEL.DEBUG, "In app message OSInAppMessageController messageWasDismissed by back press: " + message.toString());
         // IAM was not dismissed by user, will be redisplay again until user dismiss it
         dismissCurrentMessage(message);
     }
@@ -753,7 +756,7 @@ class OSInAppMessageController extends OSBackgroundManager implements OSDynamicT
                     return;
                 } else {
                     String removedMessageId = messageDisplayQueue.remove(0).messageId;
-                    logger.debug("In app message with id, " + removedMessageId + ", dismissed (removed) from the queue!");
+                    logger.debug("In app message with id: " + removedMessageId + ", dismissed (removed) from the queue!");
                 }
             }
 

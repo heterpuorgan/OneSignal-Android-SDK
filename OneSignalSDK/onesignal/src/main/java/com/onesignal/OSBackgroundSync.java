@@ -145,6 +145,9 @@ abstract class OSBackgroundSync {
             OneSignal.Log(OneSignal.LOG_LEVEL.ERROR,
                     "scheduleSyncServiceAsJob called JobScheduler.jobScheduler which " +
                             "triggered an internal null Android error. Skipping job.", e);
+        } catch (IllegalArgumentException e1){
+            OneSignal.Log(OneSignal.LOG_LEVEL.ERROR,
+                    "Illegal argument error.", e1);
         }
     }
 

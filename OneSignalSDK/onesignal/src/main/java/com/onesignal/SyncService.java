@@ -29,6 +29,7 @@ package com.onesignal;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import androidx.annotation.Nullable;
 
@@ -36,10 +37,13 @@ public class SyncService extends Service {
 
    @Override
    public int onStartCommand(Intent intent, int flags, int startId) {
-      OSSyncService.getInstance().doBackgroundSync(
-         this,
-         new OSSyncService.LegacySyncRunnable(this)
-      );
+      // 排除4.0以下的机型。
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+         OSSyncService.getInstance().doBackgroundSync(
+                 this,
+                 new OSSyncService.LegacySyncRunnable(this)
+         );
+      }
 
       return START_STICKY;
    }

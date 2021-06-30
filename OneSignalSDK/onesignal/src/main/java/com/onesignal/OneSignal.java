@@ -893,7 +893,7 @@ public class OneSignal {
       logger.debug("OneSignal handleActivityLifecycleHandler inForeground: " + inForeground);
 
       if (inForeground) {
-         if (OneSignal.getCurrentActivity() == null && activityLifecycleHandler != null) {
+         if (OneSignal.getCurrentActivity() == null && activityLifecycleHandler != null && (context instanceof Activity)) {
             activityLifecycleHandler.setCurActivity((Activity) context);
             activityLifecycleHandler.setNextResumeIsFirstActivity(true);
          }

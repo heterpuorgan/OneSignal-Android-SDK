@@ -29,6 +29,7 @@ package com.onesignal;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -37,7 +38,10 @@ public class FocusDelaySyncService extends Service {
 
    @Override
    public int onStartCommand(Intent intent, int flags, int startId) {
-      ActivityLifecycleHandler.runLostFocusLogic(this);
+      // 排除4.0以下的机型。
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+         ActivityLifecycleHandler.runLostFocusLogic(this);
+      }
       return START_STICKY;
    }
 

@@ -38,10 +38,7 @@ public class FocusDelaySyncService extends Service {
 
    @Override
    public int onStartCommand(Intent intent, int flags, int startId) {
-      // 排除4.0以下的机型。
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-         ActivityLifecycleHandler.runLostFocusLogic(this);
-      }
+      ActivityLifecycleHandler.runLostFocusLogic(this);
       return START_STICKY;
    }
 

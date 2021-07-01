@@ -89,8 +89,8 @@ class ActivityLifecycleListener implements Application.ActivityLifecycleCallback
          if (count == 0){
             isBackground = false;
             activityLifecycleHandler.onAppEnterForeground(activity);
-            count++;
          }
+         count++;
       }
 
    }

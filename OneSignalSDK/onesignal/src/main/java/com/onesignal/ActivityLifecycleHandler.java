@@ -61,6 +61,7 @@ class ActivityLifecycleHandler implements OSSystemConditionController.OSSystemCo
     private static final Map<String, ActivityAvailableListener> sActivityAvailableListeners = new ConcurrentHashMap<>();
     private static final Map<String, OSSystemConditionController.OSSystemConditionObserver> sSystemConditionObservers = new ConcurrentHashMap<>();
     private static final Map<String, KeyboardListener> sKeyboardListeners = new ConcurrentHashMap<>();
+    
 
     private static AppFocusRunnable appFocusRunnable;
     @SuppressLint("StaticFieldLeak")
@@ -81,18 +82,36 @@ class ActivityLifecycleHandler implements OSSystemConditionController.OSSystemCo
     void onActivityStarted(Activity activity) {
     }
 
+
+
+    private boolean canReportForeground;
+
+    void onAppEnterForeground(Activity activity){
+          canReportForeground = true;
+    }
+
+    void onAppEnterBackground(Activity activity){
+        handleLostFocus();
+        OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onBackground-【PHADD】 " + activity);
+    }
+
     void onActivityResumed(Activity activity) {
         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onActivityResumed: " + activity);
         setCurActivity(activity);
         logCurActivity();
-        handleFocus();
+        if (canReportForeground) {
+            handleFocus();
+            canReportForeground = false;
+            OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onForeground-【PHADD】 " + activity);
+        }
     }
+
+
 
     void onActivityPaused(Activity activity) {
         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onActivityPaused: " + activity);
         if (activity == curActivity) {
             curActivity = null;
-            handleLostFocus();
         }
 
         logCurActivity();
@@ -103,7 +122,6 @@ class ActivityLifecycleHandler implements OSSystemConditionController.OSSystemCo
 
         if (activity == curActivity) {
             curActivity = null;
-            handleLostFocus();
         }
 
         for (Map.Entry<String, ActivityAvailableListener> entry : sActivityAvailableListeners.entrySet()) {

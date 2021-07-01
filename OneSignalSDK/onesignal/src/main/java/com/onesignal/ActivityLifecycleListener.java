@@ -45,6 +45,9 @@ class ActivityLifecycleListener implements Application.ActivityLifecycleCallback
    private static ActivityLifecycleHandler activityLifecycleHandler;
    @Nullable private static ComponentCallbacks configuration;
 
+   private int count;
+   private boolean isBackground = true;
+
    static void registerActivityLifecycleCallbacks(@NonNull final Application application) {
       // Activity lifecycle listener setup
       if (instance == null) {
@@ -81,8 +84,15 @@ class ActivityLifecycleListener implements Application.ActivityLifecycleCallback
 
    @Override
    public void onActivityStarted(Activity activity) {
-      if (activityLifecycleHandler != null)
+      if (activityLifecycleHandler != null){
          activityLifecycleHandler.onActivityStarted(activity);
+         if (count == 0){
+            isBackground = false;
+            activityLifecycleHandler.onAppEnterForeground(activity);
+            count++;
+         }
+      }
+
    }
 
    @Override
@@ -99,8 +109,14 @@ class ActivityLifecycleListener implements Application.ActivityLifecycleCallback
 
    @Override
    public void onActivityStopped(Activity activity) {
-      if (activityLifecycleHandler != null)
+      if (activityLifecycleHandler != null) {
          activityLifecycleHandler.onActivityStopped(activity);
+         count--;
+         if (count == 0){
+            isBackground = true;
+            activityLifecycleHandler.onAppEnterBackground(activity);
+         }
+      }
    }
 
    @Override

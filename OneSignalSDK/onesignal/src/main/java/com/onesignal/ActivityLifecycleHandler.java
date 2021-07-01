@@ -91,18 +91,22 @@ class ActivityLifecycleHandler implements OSSystemConditionController.OSSystemCo
     }
 
     void onAppEnterBackground(Activity activity){
-        handleLostFocus();
-        OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onBackground-【PHADD】 " + activity);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            handleLostFocus();
+            OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onBackground-【PHADD】 " + activity);
+        }
     }
 
     void onActivityResumed(Activity activity) {
         OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onActivityResumed: " + activity);
         setCurActivity(activity);
         logCurActivity();
-        if (canReportForeground) {
-            handleFocus();
-            canReportForeground = false;
-            OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onForeground-【PHADD】 " + activity);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (canReportForeground) {
+                handleFocus();
+                canReportForeground = false;
+                OneSignal.Log(OneSignal.LOG_LEVEL.DEBUG, "onForeground-【PHADD】 " + activity);
+            }
         }
     }
 

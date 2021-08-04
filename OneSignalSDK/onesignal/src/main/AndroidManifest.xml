@@ -104,17 +104,17 @@
 
         <receiver android:name="com.onesignal.NotificationDismissReceiver" />
 
-        <receiver android:name="com.onesignal.BootUpReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
-        <receiver android:name="com.onesignal.UpgradeReceiver" >
-            <intent-filter>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
+<!--        <receiver android:name="com.onesignal.BootUpReceiver">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.BOOT_COMPLETED" />-->
+<!--                <action android:name="android.intent.action.QUICKBOOT_POWERON" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
+<!--        <receiver android:name="com.onesignal.UpgradeReceiver" >-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />-->
+<!--            </intent-filter>-->
+<!--        </receiver>-->
 
         <activity
           android:name="com.onesignal.NotificationOpenedReceiver"

@@ -31,6 +31,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+@Deprecated
 public class BootUpReceiver extends BroadcastReceiver {
 
    @Override

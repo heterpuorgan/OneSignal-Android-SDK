@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+@Deprecated
 public class UpgradeReceiver extends BroadcastReceiver {
 
    @Override

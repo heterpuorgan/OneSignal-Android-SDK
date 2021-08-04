@@ -34,6 +34,37 @@ android {
     }
 }
 
+
+android.libraryVariants.all {
+    variant ->
+
+        variant.outputs.all{
+
+            def libaryName = rootProject.name
+            def type = "debug"
+            def version = "4.4.0_hotfix"
+            def log = getGitCommit()
+            if (variant.buildType.name.equals('release')) {
+                type = "release"
+            }
+
+            def fileName = libaryName + "-" +  version + "-"+ type + "-" + log  +".aar"
+            outputFileName = fileName
+        }
+}
+
+def getGitCommit() {
+    def gitDir = new File("${new File("${rootDir}").getParentFile().getAbsolutePath()}/.git")
+    if (!gitDir.isDirectory()) {
+        return 'non-git-build'
+    }
+
+    def cmd = 'git log --pretty=format:%h -1'
+    def gitCommit = cmd.execute().text.trim()
+    assert !gitCommit.isEmpty()
+    gitCommit
+}
+
 // api || implementation = compile and runtime
 
 // KEEP: version ranges, these get used in the released POM file for maven central

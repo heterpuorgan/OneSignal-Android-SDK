@@ -127,11 +127,11 @@ class GenerateNotification {
     * on weird UI interaction
     */
    private static PendingIntent getNewActionPendingIntent(int requestCode, Intent intent) {
-      return PendingIntent.getActivity(currentContext, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+      return PendingIntent.getActivity(currentContext, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
    }
 
    private static PendingIntent getNewDismissActionPendingIntent(int requestCode, Intent intent) {
-      return PendingIntent.getBroadcast(currentContext, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+      return PendingIntent.getBroadcast(currentContext, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT  | PendingIntent.FLAG_IMMUTABLE);
    }
 
    private static Intent getNewBaseIntent(int notificationId) {
